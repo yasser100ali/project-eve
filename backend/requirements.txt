@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+openai
+python-dotenv
+pydantic
+openai-agents
+requests
+PyPDF2
+openpyxl
+
+# for data analyst agent
+scipy
+numpy
+pandas
+scikit-learn
