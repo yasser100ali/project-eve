@@ -125,9 +125,10 @@ export function getTextFromMessage(message: ChatMessage): string {
 
   const fileParts = message.parts
     .filter((part) => part.type === 'file')
-    .map(
-      (part) => `[File: ${part.name} (${part.mediaType}) - URL: ${part.url}]`,
-    );
+    .map((part) => {
+      const filename = part.filename ?? 'file';
+      return `[File: ${filename} (${part.mediaType}) - URL: ${part.url}]`;
+    });
 
   return [...textParts, ...fileParts].join('\n');
 }
