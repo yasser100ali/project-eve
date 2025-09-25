@@ -3,8 +3,9 @@ import time
 import logging 
 import os
 import re
+import csv
 import requests
-from io import BytesIO
+from io import BytesIO, StringIO
 from typing import List, Any, Dict, AsyncIterator
 from dotenv import load_dotenv
 from agents import Agent, Runner, WebSearchTool, CodeInterpreterTool
@@ -32,27 +33,30 @@ def extract_pdf_text(url: str) -> str:
         logger.error(f"Error extracting PDF text: {e}")
         return f"[Error reading PDF: {str(e)}]"
 
-def extract_excel_data(url: str) -> str:
-    """Extract data from Excel file"""
+def extract_tabular_data(url: str, media_type: str) -> str:
+    """Extract data from CSV or Excel-like files"""
     try:
         response = requests.get(url)
         response.raise_for_status()
-        
-        excel_file = BytesIO(response.content)
-        
-        # Try reading as Excel first
-        try:
-            df = pd.read_excel(excel_file)
-        except:
-            # If Excel fails, try CSV
-            excel_file.seek(0)
-            df = pd.read_csv(excel_file)
-        
-        # Convert to string representation
-        return df.to_string(max_rows=100)  # Limit rows to avoid huge output
+
+        if media_type == 'text/csv':
+            decoded = response.content.decode('utf-8', errors='ignore')
+            reader = csv.reader(StringIO(decoded))
+            rows = []
+            for idx, row in enumerate(reader):
+                rows.append(', '.join(cell.strip() for cell in row))
+                if idx >= 99:
+                    rows.append('...')
+                    break
+            return '\n'.join(rows) if rows else '[CSV contained no rows]'
+
+        return (
+            '[Preview unavailable for non-CSV spreadsheet formats. '
+            'Download the file to inspect its contents.]'
+        )
     except Exception as e:
-        logger.error(f"Error extracting Excel/CSV data: {e}")
-        return f"[Error reading Excel/CSV: {str(e)}]"
+        logger.error(f"Error extracting tabular data: {e}")
+        return f"[Error reading tabular data: {str(e)}]"
 
 def process_file_content(content: str) -> str:
     """Process message content and extract file contents"""
@@ -67,9 +71,13 @@ def process_file_content(content: str) -> str:
         if media_type == 'application/pdf':
             file_content = extract_pdf_text(url)
             return f"[PDF File: {filename}]\n{file_content}\n[End of PDF]"
-        elif media_type in ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']:
-            file_content = extract_excel_data(url)
-            return f"[Excel/CSV File: {filename}]\n{file_content}\n[End of Excel/CSV]"
+        elif media_type in [
+            'text/csv',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]:
+            file_content = extract_tabular_data(url, media_type)
+            return f"[Tabular File: {filename}]\n{file_content}\n[End of Tabular File]"
         else:
             return f"[File: {filename} ({media_type}) - Content not processed]"
     
