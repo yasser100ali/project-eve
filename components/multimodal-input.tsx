@@ -317,27 +317,25 @@ function PureMultimodalInput({
     chatId,
   ]);
 
-  // NEW: component-level DnD handlers (drop onto the input area)
-  const onDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+  const onDragEnter: React.DragEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.dataTransfer?.types.includes('Files')) setIsDragOver(true);
   };
-  const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const onDragOver: React.DragEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     e.stopPropagation();
   };
-  const onDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+  const onDragLeave: React.DragEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    // prevent flicker when moving between children
     setTimeout(() => {
       if (!e.currentTarget.contains(e.relatedTarget as Node)) {
         setIsDragOver(false);
       }
     }, 10);
   };
-  const onDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+  const onDrop: React.DragEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);

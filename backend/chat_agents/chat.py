@@ -9,8 +9,6 @@ from typing import List, Any, Dict, AsyncIterator
 from dotenv import load_dotenv
 from agents import Agent, Runner, WebSearchTool, CodeInterpreterTool
 import PyPDF2
-import pandas as pd
-
 
 load_dotenv()
 

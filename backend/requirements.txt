@@ -6,10 +6,5 @@ pydantic
 openai-agents
 requests
 PyPDF2
-openpyxl
 
-# for data analyst agent
-scipy
-numpy
-pandas
-scikit-learn
+
