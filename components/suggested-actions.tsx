@@ -19,37 +19,40 @@ function PureSuggestedActions({
   selectedVisibilityType,
 }: SuggestedActionsProps) {
   const suggestedActions = [
-    'What are the advantages of using Next.js?',
-    'Write code to demonstrate Dijkstra\'s algorithm',
-    'Help me write an essay about Silicon Valley',
-    'What is the weather in San Francisco?',
+    'What are some ideas to further make an AI Lawyer?',
+    'How could I use this chatbot?',
+    'Why hire Yasser?',
+    'How could we reduce hallucinations in AI Agents?',
   ];
 
   return (
-    <div data-testid="suggested-actions" className="grid sm:grid-cols-2 gap-2 w-full">
-        {suggestedActions.map((suggestedAction, index) => (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ delay: 0.05 * index }}
-            key={suggestedAction}
+    <div
+      data-testid="suggested-actions"
+      className="grid sm:grid-cols-2 gap-2 w-full"
+    >
+      {suggestedActions.map((suggestedAction, index) => (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ delay: 0.05 * index }}
+          key={suggestedAction}
+        >
+          <Suggestion
+            suggestion={suggestedAction}
+            onClick={(suggestion) => {
+              window.history.replaceState({}, '', `/chat/${chatId}`);
+              sendMessage({
+                role: 'user',
+                parts: [{ type: 'text', text: suggestion }],
+              });
+            }}
+            className="text-left w-full h-auto whitespace-normal p-3"
           >
-            <Suggestion
-              suggestion={suggestedAction}
-              onClick={(suggestion) => {
-                window.history.replaceState({}, '', `/chat/${chatId}`);
-                sendMessage({
-                  role: 'user',
-                  parts: [{ type: 'text', text: suggestion }],
-                });
-              }}
-              className="text-left w-full h-auto whitespace-normal p-3"
-            >
-              {suggestedAction}
-            </Suggestion>
-          </motion.div>
-        ))}
+            {suggestedAction}
+          </Suggestion>
+        </motion.div>
+      ))}
     </div>
   );
 }
