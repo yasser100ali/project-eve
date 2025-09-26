@@ -116,7 +116,9 @@ export async function POST(request: Request) {
           // Proxying to Python backend
 
           // Proxy to Python backend
-          const pythonResponse = await fetch('http://localhost:8000/api/chat', {
+          const backendUrl =
+            process.env.PYTHON_BACKEND_URL ?? 'http://127.0.0.1:8000';
+          const pythonResponse = await fetch(`${backendUrl}/api/chat`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
