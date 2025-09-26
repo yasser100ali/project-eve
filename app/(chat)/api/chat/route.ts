@@ -129,7 +129,9 @@ export async function POST(request: Request) {
           //     requestHints,
           //   }),
           // });
+          
 
+          
           const pythonResponse = await fetch(`${backendUrl}/api/chat`, {
             method: 'POST',
             headers: {
