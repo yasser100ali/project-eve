@@ -20,10 +20,7 @@ class ChatRequest(BaseModel):
     selectedChatModel: str
     requestHints: Dict[str, Any]
 
-# Dynamic route path: / for Vercel (proxied root), /api/chat for local uvicorn (sub-path)
-route_path = '/' if os.environ.get('VERCEL') else '/api/chat'
-
-@app.post(route_path)
+@app.post("/api/chat")
 async def chat_endpoint(chat_request: ChatRequest):
     return StreamingResponse(
         stream_chat_py(

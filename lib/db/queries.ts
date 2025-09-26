@@ -539,16 +539,17 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
 
 export async function deleteAllChatsByUserId({ userId }: { userId: string }) {
   try {
-    // First, delete related messages, votes, and streams
+    // Get all chat IDs for the user
     const chats = await getChatsByUserId({
       id: userId,
       limit: 1000,
       startingAfter: null,
       endingBefore: null,
-    }); // Get all chats to get IDs
+    });
     const chatIds = chats.chats.map((c) => c.id);
 
     if (chatIds.length > 0) {
+      // Delete related data first to avoid foreign key errors
       await db.delete(vote).where(inArray(vote.chatId, chatIds));
       await db.delete(message).where(inArray(message.chatId, chatIds));
       await db.delete(stream).where(inArray(stream.chatId, chatIds));
