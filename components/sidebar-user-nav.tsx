@@ -5,6 +5,10 @@ import Image from 'next/image';
 import type { User } from 'next-auth';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
+import { toast } from './toast';
+import { LoaderIcon } from './icons';
+import { guestRegex } from '@/lib/constants';
 
 import {
   DropdownMenu,
@@ -18,10 +22,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { useRouter } from 'next/navigation';
-import { toast } from './toast';
-import { LoaderIcon } from './icons';
-import { guestRegex } from '@/lib/constants';
 
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
@@ -29,6 +29,48 @@ export function SidebarUserNav({ user }: { user: User }) {
   const { setTheme, resolvedTheme } = useTheme();
 
   const isGuest = guestRegex.test(data?.user?.email ?? '');
+
+  const clearChats = async () => {
+    if (status === 'loading') {
+      toast({
+        type: 'error',
+        description: 'Checking authentication status, please try again!',
+      });
+      return;
+    }
+
+    if (!data?.user) {
+      toast({
+        type: 'error',
+        description: 'Please log in to clear chats.',
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/history/clear', {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast({
+          type: 'success',
+          description: 'All chats cleared successfully.',
+        });
+        router.refresh(); // Refresh to update history
+      } else {
+        toast({
+          type: 'error',
+          description: 'Failed to clear chats. Please try again.',
+        });
+      }
+    } catch (error) {
+      toast({
+        type: 'error',
+        description: 'An error occurred while clearing chats.',
+      });
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -74,7 +116,9 @@ export function SidebarUserNav({ user }: { user: User }) {
             <DropdownMenuItem
               data-testid="user-nav-item-theme"
               className="cursor-pointer"
-              onSelect={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              onSelect={() =>
+                setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+              }
             >
               {`Toggle ${resolvedTheme === 'light' ? 'dark' : 'light'} mode`}
             </DropdownMenuItem>
@@ -105,6 +149,10 @@ export function SidebarUserNav({ user }: { user: User }) {
               >
                 {isGuest ? 'Login to your account' : 'Sign out'}
               </button>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer" onSelect={clearChats}>
+              Clear chats
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
