@@ -3,7 +3,12 @@
   "rewrites": [
     {
       "source": "/api/chat",
-      "destination": "/api/main"
+      "destination": "/api/chat"
     }
-  ]
+  ],
+  "functions": {
+    "api/chat.py": {
+      "maxDuration": 30
+    }
+  }
 }

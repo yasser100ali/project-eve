@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Any, Dict
@@ -6,7 +6,7 @@ import logging
 import os
 from dotenv import load_dotenv
 
-from .chat_agents.chat import stream_chat_py
+from .chat_agents.orchestrator import stream_chat_py
 
 
 # Configure simple logging
@@ -21,7 +21,7 @@ class ChatRequest(BaseModel):
     selectedChatModel: str
     requestHints: Dict[str, Any]
 
-@app.post("/api/chat")
+@app.post("/")
 async def chat_endpoint(chat_request: ChatRequest):
     return StreamingResponse(
         stream_chat_py(
