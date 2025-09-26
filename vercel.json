@@ -1,8 +1,3 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/chat",
-      "destination": "/api/main"
-    }
-  ]
+  "buildCommand": "pnpm run build:vercel"
 }
