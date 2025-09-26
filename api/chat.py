@@ -7,8 +7,14 @@ import json
 import time
 import logging
 
-from .chat_agents.orchestrator import stream_chat_py  # your function
-
+# api/chat.py
+try:
+    # When run as a package: `uvicorn api.chat:app` (local)
+    from .chat_agents.orchestrator import stream_chat_py
+except ImportError:
+    # When run as a top-level module from inside api/: `uvicorn chat:app` (Railway)
+    from chat_agents.orchestrator import stream_chat_py
+    
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
