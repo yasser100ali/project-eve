@@ -21,7 +21,7 @@ class ChatRequest(BaseModel):
     selectedChatModel: str
     requestHints: Dict[str, Any]
 
-# Dynamic route path: root for Vercel serverless (/api/chat file serves at /api/chat), /api/chat for local uvicorn
+# Dynamic route path: / for Vercel (proxied root), /api/chat for local uvicorn (sub-path)
 route_path = '/' if os.environ.get('VERCEL') else '/api/chat'
 
 @app.post(route_path)
