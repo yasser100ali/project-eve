@@ -21,7 +21,10 @@ class ChatRequest(BaseModel):
     selectedChatModel: str
     requestHints: Dict[str, Any]
 
-@app.post("/")
+# Dynamic route path: root for Vercel serverless (/api/chat file serves at /api/chat), /api/chat for local uvicorn
+route_path = '/' if os.environ.get('VERCEL') else '/api/chat'
+
+@app.post(route_path)
 async def chat_endpoint(chat_request: ChatRequest):
     return StreamingResponse(
         stream_chat_py(

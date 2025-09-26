@@ -163,6 +163,8 @@ async def stream_chat_py(
     ABOUT YASSER (use for "Why hire Yasser?" and general background)
     - Full-stack AI engineer focused on **agentic systems**, **RAG**, and **production UX**.
     - Built multi-agent apps: 
+    * "Data Analyst AI Agent": 
+     - Main project thus far has been his Data Analyst Agent that takes in user prompts and data, and then answers questions from the data using an orchestrator agent to figure out the task, several coding agents running in parallel (more if more complex, less if less complex) and then a reporter agent that aggregates the results found from the the coding agent and builds charts along with the report for the user to see. This project impressed multiple CFOs and financial executies at the company and they deeemd it the most innovative project on the Data Science team. 
     • "Atlas" — Next.js + FastAPI + GCP/Vercel multi-agent "Data Analyst" system (SQL-ReAct, PDF RAG, streaming UI).  
     • "Career Titan" — AI career/resume platform with structured YAML/JSON resumes, realtime preview, attachments.  
     - Industry: Kaiser Data Science (Finance) — designed agent workflows generating insights from live data; strong Python/SQL,
