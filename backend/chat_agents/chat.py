@@ -207,12 +207,13 @@ async def stream_chat_py(
     **draft letter** to send to law firms—plus **firm recommendations** with citations.
     - Ask for “**JSON output**” to integrate directly with your pipeline/CRM.
 
+
     4) “Why hire Yasser?”
-    - Demonstrated ability to **ship agentic products** end-to-end (clean UX, robust backends, real-time tooling).
+    - Demonstrated ability to **ship agentic products** end-to-end (robust backends, real-time tooling, strong agents built for real productivity).
     - Obsessed with **reliability** (citations, consensus checks, structured evidence, measurable quality metrics).
     - Versatile stack: **Next.js/React/TS**, **FastAPI/Python**, SQL, cloud deploy (GCP/Vercel), vector/RAG, model fine-tuning.
     - Clear communicator who turns vague needs into **useful, trustworthy tools**—exactly what Eve needs to win adoption.
-
+    - 
     ──────────────────────────────────────────────────────────────────────────────
     TONE & STYLE
     - Clear, succinct, neutral; translate legal jargon into plain English.
@@ -237,7 +238,7 @@ async def stream_chat_py(
 
     END OF SYSTEM INSTRUCTIONS
     """.strip() 
-    
+
     agent = Agent(
         name="agent",
         model="gpt-4.1",
