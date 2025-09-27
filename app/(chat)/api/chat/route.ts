@@ -117,21 +117,10 @@ export async function POST(request: Request) {
 
           // Proxy to Python backend
           const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
-        
-          // const pythonResponse = await fetch(`${backendUrl}/api/chat`, {
-          //   method: 'POST',
-          //   headers: {
-          //     'Content-Type': 'application/json',
-          //   },
-          //   body: JSON.stringify({
-          //     messages: convertToModelMessages(uiMessages),
-          //     selectedChatModel,
-          //     requestHints,
-          //   }),
-          // });
           
+          console.log('backendUrl (server):', backendUrl);
 
-          
+
           const pythonResponse = await fetch(`${backendUrl}/api/chat`, {
             method: 'POST',
             headers: {
