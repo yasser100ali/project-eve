@@ -112,6 +112,12 @@ async def stream_chat_py(
 ) -> AsyncIterator[str]:
 
     start_time = time.time()
+    logger.info(
+        "stream_chat_py invoked | messages=%d selected_chat_mode=%s request_hints_keys=%s",
+        len(messages or []),
+        selected_chat_mode,
+        sorted((request_hints or {}).keys()),
+    )
 
     code_tool = CodeInterpreterTool(
         tool_config={"type": "code_interpreter", "container": {"type": "auto"}}
@@ -252,16 +258,27 @@ async def stream_chat_py(
     )
 
     agent_input = to_agent_messages(messages)
+    logger.debug("agent_input_preview=%s", json.dumps(agent_input[-3:], ensure_ascii=False))
 
     # Prologue 
     yield f"data: {json.dumps({"type": "start-step"})}\n\n"
     yield f"data: {json.dumps({"type": "text-start"})}\n\n"
 
     try: 
+        logger.info(
+            "Runner.run_streamed start | model=%s tools=%d history=%d",
+            getattr(agent, "model", "unknown"),
+            len(getattr(agent, "tools", []) or []),
+            len(agent_input),
+        )
+
         streamed = Runner.run_streamed(agent, input=agent_input)
+        logger.info("Runner.run_streamed stream established")
 
         async for ev in streamed.stream_events():
             et = getattr(ev, "type", "")
+            if et:
+                logger.debug("stream_event | type=%s", et)
 
             # Handle raw_response_event with ResponseTextDeltaEvent
             if et == "raw_response_event":
@@ -278,14 +295,17 @@ async def stream_chat_py(
 
             elif et in ("error", "agent.error", "run.error"):
                 msg = str(getattr(ev, "error", "unknown_error"))
+                logger.error("stream_event error | type=%s message=%s", et, msg)
                 yield f"data: {json.dumps({"type": "error", "message": msg})}\n\n"
                 
         yield f"data: {json.dumps({"type": "text-end"})}\n\n"
         yield f"data: {json.dumps({"type": "end-step"})}\n\n"
 
     except Exception as e:
-        yield f"data: {json.dumps({"type": "error", "message": str(e)})}\n\n"
+        logger.exception("stream_chat_py unhandled exception")
+        yield f"data: {json.dumps({"type": "error in orchestrator.py", "message": str(e)})}\n\n"
 
     finally: 
         end_time = time.time()
         duration = end_time - start_time
+        logger.info("stream_chat_py finished | duration_ms=%d", int(duration * 1000))
