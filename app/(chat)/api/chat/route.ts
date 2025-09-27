@@ -120,12 +120,13 @@ export async function POST(request: Request) {
           
           console.log('backendUrl (server):', backendUrl);
           
-
+          
           const pythonResponse = await fetch(`${backendUrl}/api/chat`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-from': 'vercel-frontend', // TEMP — remove after confirming
+              'x-from': 'vercel-frontend',
+              'backendURL': backendUrl // TEMP — remove after confirming
             },
             body: JSON.stringify({
               messages: convertToModelMessages(uiMessages),

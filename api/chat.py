@@ -41,6 +41,7 @@ def healthz():
 async def chat_endpoint(chat_request: ChatRequest, request: Request):
     # TEMP: log headers + parsed body to confirm path/payload
     logger.info("x-from: %s", request.headers.get("x-from", "<missing>"))
+    logger.info("backend url: ", request.headers.get("backendURL", "<missing backendUrl"))
     logger.info("payload keys: %s", list(chat_request.model_dump().keys()))
 
     # Friendly guard instead of hard 422 if model name missing
