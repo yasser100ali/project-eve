@@ -1,16 +1,12 @@
 import { config } from 'dotenv';
 import { defineConfig } from 'drizzle-kit';
+import { neon } from '@neondatabase/serverless';
 
-config({
-  path: '.env',
-});
+config(); // Loads .env.local for CLI
 
 export default defineConfig({
   schema: './lib/db/schema.ts',
   out: './lib/db/migrations',
   dialect: 'postgresql',
-  dbCredentials: {
-    // biome-ignore lint: Forbidden non-null assertion.
-    url: process.env.POSTGRES_URL!,
-  },
+  dbCredentials: neon(process.env.DATABASE_URL!),
 });
