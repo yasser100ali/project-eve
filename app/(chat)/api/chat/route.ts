@@ -1,6 +1,5 @@
 import { auth } from '@/app/(auth)/auth';
 import type { UserType } from '@/app/(auth)/auth';
-import type { RequestHints } from '@/lib/ai/prompts';
 import {
   createStreamId,
   deleteChatById,
@@ -17,13 +16,14 @@ import {
 import { generateTitleFromUserMessage } from '../../actions';
 import { postRequestBodySchema } from './schema';
 import type { PostRequestBody } from './schema';
-import { geolocation } from '@vercel/functions';
 import { createUIMessageStream, JsonToSseTransformStream } from 'ai';
 import { getStreamContext } from '@/lib/stream-context';
 import { ChatSDKError } from '@/lib/errors';
 import type { ChatMessage } from '@/lib/types';
 import type { ChatModel } from '@/lib/ai/models';
 import type { VisibilityType } from '@/components/visibility-selector';
+
+export const runtime = 'nodejs';
 
 export const maxDuration = 60;
 
@@ -83,15 +83,6 @@ export async function POST(request: Request) {
     const messagesFromDb = await getMessagesByChatId({ id });
     const uiMessages = [...convertToUIMessages(messagesFromDb), message];
 
-    const { longitude, latitude, city, country } = geolocation(request);
-
-    const requestHints: RequestHints = {
-      longitude,
-      latitude,
-      city,
-      country,
-    };
-
     await saveMessages({
       messages: [
         {
@@ -148,7 +139,6 @@ export async function POST(request: Request) {
             body: JSON.stringify({
               messages: convertToModelMessages(uiMessages),
               selectedChatModel,
-              requestHints,
             }),
           });
 

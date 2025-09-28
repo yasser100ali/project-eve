@@ -31,7 +31,6 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     messages: List[Dict[str, Any]] = Field(default_factory=list)
     selectedChatModel: Optional[str] = None
-    requestHints: Dict[str, Any] = Field(default_factory=dict)
 
 @app.get("/healthz")
 def healthz():
@@ -59,7 +58,6 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
             async for chunk in stream_chat_py(
                 chat_request.messages,
                 chat_request.selectedChatModel,
-                chat_request.requestHints,
             ):
                 # Ensure each chunk is bytes; chunk should already be "data: {...}\n\n"
                 yield chunk.encode("utf-8")

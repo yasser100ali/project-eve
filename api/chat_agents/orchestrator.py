@@ -108,15 +108,13 @@ def to_agent_messages(history: List[Dict[str, Any]]):
 async def stream_chat_py(
     messages: List[Dict[str, Any]],
     selected_chat_mode: str,
-    request_hints: Dict[str, Any] | None 
 ) -> AsyncIterator[str]:
 
     start_time = time.time()
     logger.info(
-        "stream_chat_py invoked | messages=%d selected_chat_mode=%s request_hints_keys=%s",
+        "stream_chat_py invoked | messages=%d selected_chat_mode=%s",
         len(messages or []),
         selected_chat_mode,
-        sorted((request_hints or {}).keys()),
     )
 
     code_tool = CodeInterpreterTool(
