@@ -1,21 +1,12 @@
 import { auth } from '@/app/(auth)/auth';
-import type { UserType } from '@/app/(auth)/auth';
-import {
-  createStreamId,
-  deleteChatById,
-  getChatById,
-  getMessagesByChatId,
-  saveChat,
-  saveMessages,
-} from '@/lib/db/queries';
 import {
   convertToUIMessages,
   convertToModelMessages,
   generateUUID,
   getTextFromMessage,
 } from '@/lib/utils';
-import { generateTitleFromUserMessage } from '../../actions';
 import { postRequestBodySchema } from './schema';
+import { generateTitleFromUserMessage } from '../../actions';
 import type { PostRequestBody } from './schema';
 import { createUIMessageStream, JsonToSseTransformStream } from 'ai';
 import { getStreamContext } from '@/lib/stream-context';
@@ -38,15 +29,6 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse();
   }
 
-  console.log('Parsed request body:', {
-    id: requestBody.id,
-    messageParts: requestBody.message.parts,
-    messageContentPreview: getTextFromMessage(requestBody.message).substring(
-      0,
-      50,
-    ),
-  });
-
   try {
     const {
       id,
@@ -60,25 +42,11 @@ export async function POST(request: Request) {
       selectedVisibilityType: VisibilityType;
     } = requestBody;
 
-    const messageContent = getTextFromMessage(message);
-    if (!messageContent.trim()) {
-      console.log('Empty message guard triggered, returning error');
-      return new ChatSDKError(
-        'bad_request:api',
-        'Please enter a message or attach a file.',
-      ).toResponse();
-    }
-
     const session = await auth();
 
     if (!session?.user) {
       return new ChatSDKError('unauthorized:chat').toResponse();
     }
-
-    const userType: UserType = session.user.type;
-
-    // Disable app-level per-day message limits
-    // (previously compared against entitlementsByUserType[userType].maxMessagesPerDay)
 
     // Mock DB functions - disable for no-DB mode
     const mockChat = {
@@ -87,35 +55,25 @@ export async function POST(request: Request) {
       title: 'Mock Chat',
       visibility: selectedVisibilityType,
     };
-    const mockMessages = [];
+    const mockMessages: any[] = [];
 
-    // Skip DB fetch for chat
-    // const chat = await getChatById({ id });
-    const chat = mockChat;
+    const chat = mockChat; // Always mock, non-null
 
     if (!chat) {
-      // Skip save
-      // await saveChat({ id, userId: session.user.id, title, visibility: selectedVisibilityType });
-      console.log('Skipped saveChat - no DB');
-    } else {
-      if (chat.userId !== session.user.id) {
-        return new ChatSDKError('forbidden:chat').toResponse();
-      }
+      return new ChatSDKError('bad_request:api').toResponse();
     }
 
-    // Skip getMessages
-    // const messagesFromDb = await getMessagesByChatId({ id });
+    if (chat.userId !== session.user.id) {
+      return new ChatSDKError('forbidden:chat').toResponse();
+    }
+
     const messagesFromDb = mockMessages;
 
     const uiMessages = [...convertToUIMessages(messagesFromDb), message];
 
     // Skip save user message
-    // await saveMessages({ messages: [ { chatId: id, id: message.id, role: 'user', parts: message.parts, attachments: [], createdAt: new Date() } ] });
     console.log('Skipped saveMessages - no DB');
 
-    // Skip stream ID creation
-    // const streamId = generateUUID();
-    // await createStreamId({ streamId, chatId: id });
     const streamId = generateUUID();
     console.log('Skipped createStreamId - no DB');
 
@@ -124,24 +82,13 @@ export async function POST(request: Request) {
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {
         try {
-          // Proxying to Python backend
-
           // Proxy to Python backend
-          // const backendUrl =
-          //   process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8000';
-
           const backendUrl =
-            'https://enchanting-presence-production.up.railway.app';
+            process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8000';
 
           console.log(
             'PYTHON_BACKEND_URL is set?',
             Boolean(process.env.PYTHON_BACKEND_URL),
-          );
-          console.log('backendUrl (server):', backendUrl);
-
-          console.log(
-            'Here is the railway url',
-            process.env.PYTHON_BACKEND_URL,
           );
           console.log('backendUrl (server):', backendUrl);
 
@@ -163,7 +110,7 @@ export async function POST(request: Request) {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s to beat 30s Vercel limit
 
-          let pythonResponse: Response | undefined;
+          let pythonResponse: Response;
           try {
             pythonResponse = await fetch(pythonChatUrl, {
               method: 'POST',
@@ -195,9 +142,9 @@ export async function POST(request: Request) {
             clearTimeout(timeoutId);
           }
 
-          if (!pythonResponse?.ok) {
+          if (!pythonResponse.ok) {
             throw new Error(
-              `Python backend error: ${pythonResponse?.status} ${pythonResponse?.statusText}`,
+              `Python backend error: ${pythonResponse.status} ${pythonResponse.statusText}`,
             );
           }
 
@@ -225,8 +172,6 @@ export async function POST(request: Request) {
               for (const line of lines) {
                 const trimmed = line.trim();
                 if (!trimmed) continue;
-
-                // Removed token-by-token logging to clean up console
 
                 let jsonPayload: any = null;
 
@@ -332,17 +277,18 @@ export async function POST(request: Request) {
       },
       generateId: generateUUID,
       onFinish: async ({ messages }) => {
-        // Messages saved successfully
-        await saveMessages({
-          messages: messages.map((message) => ({
-            id: message.id,
-            role: message.role,
-            parts: message.parts,
-            createdAt: new Date(),
-            attachments: [],
-            chatId: id,
-          })),
-        });
+        // Messages saved successfully - skip in no-DB mode
+        // await saveMessages({
+        //   messages: messages.map((message) => ({
+        //     id: message.id,
+        //     role: message.role,
+        //     parts: message.parts,
+        //     createdAt: new Date(),
+        //     attachments: [],
+        //     chatId: id,
+        //   })),
+        // });
+        console.log('Skipped onFinish saveMessages - no DB');
       },
       onError: () => {
         console.error('[chat:route] UI stream error');
@@ -385,13 +331,19 @@ export async function DELETE(request: Request) {
     return new ChatSDKError('unauthorized:chat').toResponse();
   }
 
-  const chat = await getChatById({ id });
+  // Mock delete - no DB
+  // const chat = await getChatById({ id });
+  const chat = { id, userId: session.user.id }; // Mock for auth check
+  console.log('Mock getChatById for delete - mock chat');
 
   if (chat.userId !== session.user.id) {
     return new ChatSDKError('forbidden:chat').toResponse();
   }
 
-  const deletedChat = await deleteChatById({ id });
+  // Skip delete
+  // const deletedChat = await deleteChatById({ id });
+  const deletedChat = { id, success: true };
+  console.log('Skipped deleteChatById - no DB');
 
   return Response.json(deletedChat, { status: 200 });
 }

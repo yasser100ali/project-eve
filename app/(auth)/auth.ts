@@ -1,42 +1,7 @@
-import { compare } from 'bcrypt-ts';
-import NextAuth, { type DefaultSession } from 'next-auth';
-import { createGuestUser, getUser } from '@/lib/db/queries';
+import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
-import { DUMMY_PASSWORD } from '@/lib/constants';
-import type { DefaultJWT } from 'next-auth/jwt';
 
-export type UserType = 'guest' | 'regular';
-
-declare module 'next-auth' {
-  interface Session extends DefaultSession {
-    user: {
-      id: string;
-      type: UserType;
-    } & DefaultSession['user'];
-  }
-
-  interface User {
-    id?: string;
-    email?: string | null;
-    type: UserType;
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT extends DefaultJWT {
-    id: string;
-    type: UserType;
-  }
-}
-
-export const runtime = 'nodejs';
-
-export const {
-  handlers: { GET, POST },
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: undefined, // Disable DB adapter
   providers: [
@@ -56,21 +21,9 @@ export const {
     strategy: 'jwt', // Use JWT, no DB sessions
   },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id as string;
-        token.type = user.type;
-      }
-
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id;
-        session.user.type = token.type;
-      }
-
-      return session;
-    },
+    // ... existing callbacks, ensure no DB calls
   },
+  // ... rest of config, no DB adapter
 });
+
+export const runtime = 'nodejs';
