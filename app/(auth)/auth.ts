@@ -29,6 +29,8 @@ declare module 'next-auth/jwt' {
   }
 }
 
+export const runtime = 'nodejs';
+
 export const {
   handlers: { GET, POST },
   auth,
@@ -36,7 +38,7 @@ export const {
   signOut,
 } = NextAuth({
   ...authConfig,
-  adapter: null, // Disable DB adapter
+  adapter: undefined, // Disable DB adapter
   providers: [
     // CredentialsProvider({
     //   // ... existing credentials config if present
