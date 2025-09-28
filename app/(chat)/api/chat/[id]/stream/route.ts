@@ -1,10 +1,6 @@
 import { auth } from '@/app/(auth)/auth';
-import {
-  getChatById,
-  getMessagesByChatId,
-  getStreamIdsByChatId,
-} from '@/lib/db/queries';
-import type { Chat } from '@/lib/db/schema';
+// Mock imports - no DB queries needed
+// import { getMessagesByChatId, getStreamIdsByChatId } from '@/lib/db/queries';
 import { ChatSDKError } from '@/lib/errors';
 import type { ChatMessage } from '@/lib/types';
 import { createUIMessageStream, JsonToSseTransformStream } from 'ai';
@@ -12,32 +8,26 @@ import { getStreamContext } from '@/lib/stream-context';
 import { differenceInSeconds } from 'date-fns';
 
 export async function GET(
-  _: Request,
-  { params }: { params: Promise<{ id: string }> },
+  request: Request,
+  { params }: { params: { id: string } },
 ) {
-  const { id: chatId } = await params;
+  const streamId = params.id;
 
-  const streamContext = getStreamContext();
-  const resumeRequestedAt = new Date();
+  // Mock DB functions - no-DB mode
+  const mockChat = {
+    id: streamId,
+    userId: 'mock-user',
+    title: 'Mock Stream Chat',
+    visibility: 'private' as const,
+    createdAt: new Date(),
+  };
 
-  if (!streamContext) {
-    return new Response(null, { status: 204 });
-  }
-
-  if (!chatId) {
-    return new ChatSDKError('bad_request:api').toResponse();
-  }
-
-  const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError('unauthorized:chat').toResponse();
-  }
-
-  let chat: Chat;
-
+  let chat: typeof mockChat;
   try {
-    chat = await getChatById({ id: chatId });
+    // Skip DB fetch
+    // chat = await getChatById({ id: chatId });
+    chat = mockChat;
+    console.log('Mock getChatById in stream route - mock chat');
   } catch {
     return new ChatSDKError('not_found:chat').toResponse();
   }
@@ -46,11 +36,32 @@ export async function GET(
     return new ChatSDKError('not_found:chat').toResponse();
   }
 
+  const session = await auth();
+
+  if (!session?.user || session.user.id !== chat.userId) {
+    return new ChatSDKError('unauthorized:stream').toResponse();
+  }
+
+  const streamContext = getStreamContext();
+  const resumeRequestedAt = new Date();
+
+  if (!streamContext) {
+    return new Response(null, { status: 204 });
+  }
+
+  const chatId = streamId; // Use streamId as chatId for mock
+  if (!chatId) {
+    return new ChatSDKError('bad_request:api').toResponse();
+  }
+
   if (chat.visibility === 'private' && chat.userId !== session.user.id) {
     return new ChatSDKError('forbidden:chat').toResponse();
   }
 
-  const streamIds = await getStreamIdsByChatId({ chatId });
+  // Mock stream IDs - no DB
+  // const streamIds = await getStreamIdsByChatId({ chatId });
+  const streamIds = [streamId];
+  console.log('Mock getStreamIdsByChatId - mock stream');
 
   if (!streamIds.length) {
     return new ChatSDKError('not_found:stream').toResponse();
@@ -75,7 +86,10 @@ export async function GET(
    * but the resumable stream has concluded at this point.
    */
   if (!stream) {
-    const messages = await getMessagesByChatId({ id: chatId });
+    // Mock messages - no DB
+    // const messages = await getMessagesByChatId({ id: chatId });
+    const messages: any[] = [];
+    console.log('Mock getMessagesByChatId in stream - empty');
     const mostRecentMessage = messages.at(-1);
 
     if (!mostRecentMessage) {
