@@ -9,9 +9,9 @@ import { differenceInSeconds } from 'date-fns';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const streamId = params.id;
+  const { id: streamId } = await params;
 
   // Mock DB functions - no-DB mode
   const mockChat = {
