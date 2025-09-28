@@ -80,43 +80,44 @@ export async function POST(request: Request) {
     // Disable app-level per-day message limits
     // (previously compared against entitlementsByUserType[userType].maxMessagesPerDay)
 
-    const chat = await getChatById({ id });
+    // Mock DB functions - disable for no-DB mode
+    const mockChat = {
+      id,
+      userId: session.user.id,
+      title: 'Mock Chat',
+      visibility: selectedVisibilityType,
+    };
+    const mockMessages = [];
+
+    // Skip DB fetch for chat
+    // const chat = await getChatById({ id });
+    const chat = mockChat;
 
     if (!chat) {
-      const title = await generateTitleFromUserMessage({
-        message,
-      });
-
-      await saveChat({
-        id,
-        userId: session.user.id,
-        title,
-        visibility: selectedVisibilityType,
-      });
+      // Skip save
+      // await saveChat({ id, userId: session.user.id, title, visibility: selectedVisibilityType });
+      console.log('Skipped saveChat - no DB');
     } else {
       if (chat.userId !== session.user.id) {
         return new ChatSDKError('forbidden:chat').toResponse();
       }
     }
 
-    const messagesFromDb = await getMessagesByChatId({ id });
+    // Skip getMessages
+    // const messagesFromDb = await getMessagesByChatId({ id });
+    const messagesFromDb = mockMessages;
+
     const uiMessages = [...convertToUIMessages(messagesFromDb), message];
 
-    await saveMessages({
-      messages: [
-        {
-          chatId: id,
-          id: message.id,
-          role: 'user',
-          parts: message.parts,
-          attachments: [],
-          createdAt: new Date(),
-        },
-      ],
-    });
+    // Skip save user message
+    // await saveMessages({ messages: [ { chatId: id, id: message.id, role: 'user', parts: message.parts, attachments: [], createdAt: new Date() } ] });
+    console.log('Skipped saveMessages - no DB');
 
+    // Skip stream ID creation
+    // const streamId = generateUUID();
+    // await createStreamId({ streamId, chatId: id });
     const streamId = generateUUID();
-    await createStreamId({ streamId, chatId: id });
+    console.log('Skipped createStreamId - no DB');
 
     let finalUsage: any;
 

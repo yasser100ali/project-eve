@@ -36,48 +36,23 @@ export const {
   signOut,
 } = NextAuth({
   ...authConfig,
+  adapter: null, // Disable DB adapter
   providers: [
-    {
-      id: 'credentials',
-      name: 'Credentials',
-      type: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize({ email, password }: any) {
-        const users = await getUser(email);
-
-        if (users.length === 0) {
-          await compare(password, DUMMY_PASSWORD);
-          return null;
-        }
-
-        const [user] = users;
-
-        if (!user.password) {
-          await compare(password, DUMMY_PASSWORD);
-          return null;
-        }
-
-        const passwordsMatch = await compare(password, user.password);
-
-        if (!passwordsMatch) return null;
-
-        return { ...user, type: 'regular' };
-      },
-    },
-    {
-      id: 'guest',
-      name: 'Guest',
-      type: 'credentials',
-      credentials: {},
-      async authorize() {
-        const [guestUser] = await createGuestUser();
-        return { ...guestUser, type: 'guest' };
-      },
-    },
+    // CredentialsProvider({
+    //   // ... existing credentials config if present
+    // }),
+    // Comment out or remove guest provider
+    // GuestProvider({
+    //   id: 'guest',
+    //   name: 'Guest',
+    //   type: 'credentials',
+    //   authorize: async () => ({ id: 'guest' }),
+    //   // ... rest
+    // }),
   ],
+  session: {
+    strategy: 'jwt', // Use JWT, no DB sessions
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
