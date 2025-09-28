@@ -38,6 +38,15 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse();
   }
 
+  console.log('Parsed request body:', {
+    id: requestBody.id,
+    messageParts: requestBody.message.parts,
+    messageContentPreview: getTextFromMessage(requestBody.message).substring(
+      0,
+      50,
+    ),
+  });
+
   try {
     const {
       id,
@@ -53,6 +62,7 @@ export async function POST(request: Request) {
 
     const messageContent = getTextFromMessage(message);
     if (!messageContent.trim()) {
+      console.log('Empty message guard triggered, returning error');
       return new ChatSDKError(
         'bad_request:api',
         'Please enter a message or attach a file.',
