@@ -120,34 +120,16 @@ export async function POST(request: Request) {
             process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8000';
 
           console.log(
+            'PYTHON_BACKEND_URL is set?',
+            Boolean(process.env.PYTHON_BACKEND_URL),
+          );
+          console.log('backendUrl (server):', backendUrl);
+
+          console.log(
             'Here is the railway url',
             process.env.PYTHON_BACKEND_URL,
           );
           console.log('backendUrl (server):', backendUrl);
-
-          const debugMessageId = generateUUID();
-          dataStream.write({
-            type: 'text-start',
-            id: debugMessageId,
-          } as any);
-          dataStream.write({
-            type: 'text-delta',
-            id: debugMessageId,
-            delta: `\n[debug] Backend URL: ${backendUrl}\n`,
-          } as any);
-          dataStream.write({
-            type: 'text-delta',
-            id: debugMessageId,
-            delta: `Request body: ${JSON.stringify({
-              messages: convertToModelMessages(uiMessages),
-              selectedChatModel,
-              requestHints,
-            })}\n`,
-          } as any);
-          dataStream.write({
-            type: 'text-end',
-            id: debugMessageId,
-          } as any);
 
           const pythonBackendBaseUrl =
             process.env.PYTHON_BACKEND_URL || 'http://localhost:8000';
