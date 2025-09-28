@@ -43,6 +43,8 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
     logger.info("backendURL header: %s", request.headers.get("backendurl"))
     logger.info("payload keys: %s", list(chat_request.model_dump().keys()))
 
+    logger.info(f"Received {len(chat_request.messages)} messages, last content preview: '{chat_request.messages[-1]['content'][:50] if chat_request.messages else 'EMPTY'}'")
+
     # Friendly guard instead of hard 422 if model name missing
     if not chat_request.selectedChatModel:
         err = {"type": "error", "message": "selectedChatModel is required"}

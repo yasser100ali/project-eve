@@ -12,6 +12,7 @@ import {
   convertToUIMessages,
   convertToModelMessages,
   generateUUID,
+  getTextFromMessage,
 } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
 import { postRequestBodySchema } from './schema';
@@ -49,6 +50,14 @@ export async function POST(request: Request) {
       selectedChatModel: ChatModel['id'];
       selectedVisibilityType: VisibilityType;
     } = requestBody;
+
+    const messageContent = getTextFromMessage(message);
+    if (!messageContent.trim()) {
+      return new ChatSDKError(
+        'bad_request:empty_message',
+        'Please enter a message or attach a file.',
+      ).toResponse();
+    }
 
     const session = await auth();
 
@@ -110,9 +119,9 @@ export async function POST(request: Request) {
           // const backendUrl =
           //   process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8000';
 
+          const backendUrl =
+            'https://enchanting-presence-production.up.railway.app';
 
-          const backendUrl = "https://enchanting-presence-production.up.railway.app"
-          
           console.log(
             'PYTHON_BACKEND_URL is set?',
             Boolean(process.env.PYTHON_BACKEND_URL),
@@ -132,18 +141,48 @@ export async function POST(request: Request) {
             pythonBackendBaseUrl,
           ).toString();
 
-          const pythonResponse = await fetch(pythonChatUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-from': 'vercel-frontend',
-              backendURL: backendUrl, // TEMP — remove after confirming
-            },
-            body: JSON.stringify({
-              messages: convertToModelMessages(uiMessages),
-              selectedChatModel,
-            }),
+          console.log('Proxy to Python:', {
+            url: pythonChatUrl,
+            messagesCount: convertToModelMessages(uiMessages).length,
+            lastUserContent:
+              getTextFromMessage(message).substring(0, 50) +
+              (getTextFromMessage(message).length > 50 ? '...' : ''),
           });
+
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s to beat 30s Vercel limit
+
+          let pythonResponse;
+          try {
+            pythonResponse = await fetch(pythonChatUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-from': 'vercel-frontend',
+                backendURL: backendUrl, // Temp logging
+              },
+              body: JSON.stringify({
+                messages: convertToModelMessages(uiMessages),
+                selectedChatModel,
+              }),
+              signal: controller.signal,
+            });
+          } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+              dataStream.write({
+                type: 'text-delta',
+                id: generateUUID(),
+                delta: `\n[Timeout] Backend took too long. Try again.\n`,
+              });
+              dataStream.write({ type: 'text-end' } as any);
+              dataStream.write({ type: 'finish' } as any);
+              return; // Exit early
+            }
+            throw error;
+          } finally {
+            clearTimeout(timeoutId);
+          }
 
           if (!pythonResponse.ok) {
             throw new Error(
