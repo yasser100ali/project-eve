@@ -10,10 +10,10 @@ export async function GET(request: Request) {
     return new ChatSDKError('unauthorized:chat').toResponse();
   }
 
-  // Mock empty history - no DB
+  // Mock empty history - no DB, return paginated format
   // const chats = await getChatsByUserId({ userId: session.user.id });
-  const chats = [];
-  console.log('Skipped getChatsByUserId - no DB, returning empty');
+  const chats = { chats: [], hasMore: false };
+  console.log('Mock getChatsByUserId - empty paginated response');
 
   return Response.json(chats);
 }
