@@ -149,7 +149,14 @@ export async function POST(request: Request) {
             id: debugMessageId,
           } as any);
 
-          const pythonResponse = await fetch(`${backendUrl}/api/chat`, {
+          const pythonBackendBaseUrl =
+            process.env.PYTHON_BACKEND_URL || 'http://localhost:8000';
+          const pythonChatUrl = new URL(
+            '/api/chat',
+            pythonBackendBaseUrl,
+          ).toString();
+
+          const pythonResponse = await fetch(pythonChatUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
