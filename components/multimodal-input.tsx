@@ -11,7 +11,6 @@ import {
   type ChangeEvent,
   memo,
   useMemo,
-  useRef as _useRef, // no-op alias to avoid accidental shadowing
 } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
@@ -229,7 +228,7 @@ function PureMultimodalInput({
         }
       }
     },
-    [setAttachments],
+    [isSupportedFile, setAttachments, setUploadQueue],
   );
 
   const handleFileChange = useCallback(

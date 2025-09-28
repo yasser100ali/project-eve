@@ -107,9 +107,12 @@ export async function POST(request: Request) {
           // Proxying to Python backend
 
           // Proxy to Python backend
-          const backendUrl =
-            process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8000';
+          // const backendUrl =
+          //   process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8000';
 
+
+          const backendUrl = "https://enchanting-presence-production.up.railway.app"
+          
           console.log(
             'PYTHON_BACKEND_URL is set?',
             Boolean(process.env.PYTHON_BACKEND_URL),
