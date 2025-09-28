@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     const messageContent = getTextFromMessage(message);
     if (!messageContent.trim()) {
       return new ChatSDKError(
-        'bad_request:empty_message',
+        'bad_request:api',
         'Please enter a message or attach a file.',
       ).toResponse();
     }
@@ -152,7 +152,7 @@ export async function POST(request: Request) {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s to beat 30s Vercel limit
 
-          let pythonResponse;
+          let pythonResponse: Response | undefined;
           try {
             pythonResponse = await fetch(pythonChatUrl, {
               method: 'POST',
@@ -167,9 +167,9 @@ export async function POST(request: Request) {
               }),
               signal: controller.signal,
             });
-          } catch (error) {
+          } catch (error: unknown) {
             clearTimeout(timeoutId);
-            if (error.name === 'AbortError') {
+            if (error instanceof Error && error.name === 'AbortError') {
               dataStream.write({
                 type: 'text-delta',
                 id: generateUUID(),
@@ -184,9 +184,9 @@ export async function POST(request: Request) {
             clearTimeout(timeoutId);
           }
 
-          if (!pythonResponse.ok) {
+          if (!pythonResponse?.ok) {
             throw new Error(
-              `Python backend error: ${pythonResponse.status} ${pythonResponse.statusText}`,
+              `Python backend error: ${pythonResponse?.status} ${pythonResponse?.statusText}`,
             );
           }
 
